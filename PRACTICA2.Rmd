@@ -1,0 +1,73 @@
+---
+title: "Practica_2"
+author: "Pedro Sanchez"
+date: "2024-05-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+## PREGUNTA 1:
+
+Descargar la página web de la URL indicada, y almacenarlo en un formato de R apto para ser tratado. El primer paso para realizar tareas de crawling y scraping es poder descargar los datos de la web. Para esto usaremos la capacidad de R y de sus librerías (httr y XML) para descargar webs y almacenarlas en variables que podamos convertir en un formato fácil de analizar (p.e. de HTML a XML).
+
+```{r cars}
+library(httr)
+library(XML)
+library(rvest)
+```
+
+
+```{r Descarga Pagina}
+html <- read_html("https://www.mediawiki.org/wiki/MediaWiki")
+class(html)
+```
+2. Analizar el contenido de la web, buscando el título de la página (que en HTML
+se etiqueta como “title”).
+En las cabeceras web encontramos información como el título, los ficheros de
+estilo visual, y meta-información como el nombre del autor de la página, una
+descripción de esta, el tipo de codificación de esta, o palabras clave que indican
+qué tipo de información contiene la página. Una vez descargada la página, y
+convertida a un formato analizable (como XML), buscaremos los elementos de
+tipo “title”. P.e. “<title>Titulo de Página</title>”.
+
+```{r Extraccion titulo}
+titulo <- html %>% html_element("title") %>% html_text2()
+```
+3. Analizar el contenido de la web, buscando todos los enlaces (que en HTML se
+etiquetan como “a”), buscando el texto del enlace, así como la URL.
+Vamos a extraer, usando las funciones de búsqueda XML, todos los enlaces que
+salen de esta página con tal de listarlos y poder descargarlas más tarde. Sabemos
+que estos son elementos de tipo “<a>”, que tienen el atributo “href” para indicar
+la URL del enlace. P.e. “<a href = ‘enlace’>Texto del Enlace</a>”. Del enlace
+nos quedaremos con la URL de destino y con el valor del enlace (texto del
+enlace).
+
+```{r Extraccion enlaces}
+
+extra_enlaces <- html %>% html_elements("a") %>% html_text()
+extra_enlaces
+```
+
+```{r Extraccion url}
+
+extra_url <- html %>% html_elements("a") %>% html_attr("href")
+extra_url
+```
+
+4. Generar una tabla con cada enlace encontrado, indicando el texto que
+acompaña el enlace, y el número de veces que aparece un enlace con ese
+mismo objetivo.
+En este paso nos interesa reunir los datos obtenidos en el anterior paso.
+Tendremos que comprobar, para cada enlace, cuantas veces aparece.
+
+
+```{r generar tabla}
+
+gener_tabla <- data.frame("enlace" = extra_enlaces, "url" = extra_url, stringsAsFactors = F)
+gener_tabla
+```
