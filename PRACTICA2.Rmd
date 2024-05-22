@@ -19,6 +19,10 @@ Descargar la página web de la URL indicada, y almacenarlo en un formato de R ap
 library(httr)
 library(XML)
 library(rvest)
+library(xml2)
+library(dplyr)
+library(gridExtra)
+
 ```
 
 
@@ -37,6 +41,7 @@ tipo “title”. P.e. “<title>Titulo de Página</title>”.
 
 ```{r Extraccion titulo}
 titulo <- html %>% html_element("title") %>% html_text2()
+
 ```
 3. Analizar el contenido de la web, buscando todos los enlaces (que en HTML se
 etiquetan como “a”), buscando el texto del enlace, así como la URL.
@@ -71,3 +76,55 @@ Tendremos que comprobar, para cada enlace, cuantas veces aparece.
 gener_tabla <- data.frame("enlace" = extra_enlaces, "url" = extra_url, stringsAsFactors = F)
 gener_tabla
 ```
+
+5.
+
+```{r corregir_tabla}
+
+url <- "https://www.mediawiki.org/wiki/MediaWiki"
+response <- GET(url)
+
+if (status_code(response) == 200) {
+  
+  page_html <- read_html(content(response, "text"))
+ 
+  page_xml <- read_html(content(response, "text"))
+  
+  title_node <- xml_find_first(page_xml, "//title")
+  
+  title <- xml_text(title_node)
+  
+  links <- page_xml %>%
+    xml_find_all("//a") %>%
+    lapply(function(node) {
+      text <- xml_text(node)
+      url <- xml_attr(node, "href")
+      
+      if (grepl("^//", url)) {
+        url <- paste("https:", url, sep = "")
+      } else if (grepl("^/", url)) {
+        url <- paste("https://www.mediawiki.org", url, sep = "")
+      }
+      
+      if (!grepl("^https?://www.mediawiki.org", url)) {
+        status <- "Enlace Local"
+      } else {
+        # Verificar el estado del enlace
+        head_response <- httr::HEAD(url)
+        status <- status_code(head_response)
+      }
+      list(text = text, url = url, status = status)
+      
+      
+     # Pausa entre peticiones
+     # Sys.sleep(2) 
+      
+    })
+  
+  
+}
+
+
+
+```
+
